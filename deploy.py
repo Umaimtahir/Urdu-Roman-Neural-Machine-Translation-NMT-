@@ -2,6 +2,7 @@ import streamlit as st
 import torch
 import torch.nn as nn
 import pickle
+import os  
 
 st.set_page_config(page_title="Urdu-Roman NMT", layout="wide", initial_sidebar_state="collapsed")
 
@@ -260,15 +261,37 @@ class Seq2SeqNMT(nn.Module):
             
             return outputs
 
+import os
+import streamlit as st
+import torch
+import torch.nn as nn
+import pickle
+
 @st.cache_resource
 def load_model():
     try:
-        base_path = r"E:\Semester 7\NLP\assignment1\final models"
+        # Use current directory instead of absolute path
+        base_path = "."
+        model_file = os.path.join(base_path, "nmt_model.pth")
+        config_file = os.path.join(base_path, "model_config.pkl")
         
-        with open(f"{base_path}/model_config.pkl", "rb") as f:
+        # Check if files exist
+        if not os.path.exists(model_file):
+            st.error("Model file (nmt_model.pth) not found!")
+            st.info("Please ensure the model file is uploaded to your repository or use external storage.")
+            return None, None, None, None
+            
+        if not os.path.exists(config_file):
+            st.error("Config file (model_config.pkl) not found!")
+            st.info("Please ensure the config file is uploaded to your repository.")
+            return None, None, None, None
+        
+        # Load model config
+        with open(config_file, "rb") as f:
             config = pickle.load(f)
         
-        state_dict = torch.load(f"{base_path}/nmt_model.pth", map_location="cpu")
+        # Load model weights
+        state_dict = torch.load(model_file, map_location="cpu")
         
         urdu_vocab_size = state_dict["encoder.embedding.weight"].shape[0]
         roman_vocab_size = state_dict["decoder.embedding.weight"].shape[0]
@@ -286,7 +309,7 @@ def load_model():
             text = re.sub(r'\s+', ' ', text).strip()
             
             chars = list(text)
-            token_ids = [2]
+            token_ids = [2]  # BOS token
             
             for char in chars:
                 if char == ' ':
@@ -298,7 +321,7 @@ def load_model():
                 else:
                     token_ids.append((ord(char) % (urdu_vocab_size - 10)) + 4)
             
-            token_ids.append(3)
+            token_ids.append(3)  # EOS token
             return token_ids
         
         def detokenize_roman(token_ids):
@@ -329,12 +352,20 @@ def load_model():
             return result[0].upper() + result[1:] if len(result) > 1 else result.upper()
         
         return model, tokenize_urdu, detokenize_roman, {
-            "urdu_vocab": urdu_vocab_size, "roman_vocab": roman_vocab_size,
-            "embedding_dim": embedding_dim, "hidden_dim": hidden_dim
+            "urdu_vocab": urdu_vocab_size, 
+            "roman_vocab": roman_vocab_size,
+            "embedding_dim": embedding_dim, 
+            "hidden_dim": hidden_dim
         }
     
+    except FileNotFoundError as e:
+        st.error(f"File not found: {str(e)}")
+        st.info("Please check that all model files are in the correct location.")
+        return None, None, None, None
+    
     except Exception as e:
-        st.error(f"Model loading failed: {e}")
+        st.error(f"Error loading model: {str(e)}")
+        st.info("Please check the model files and try again.")
         return None, None, None, None
 
 def rule_based_translate(text):
@@ -520,4 +551,5 @@ def main():
             """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
+
     main()
