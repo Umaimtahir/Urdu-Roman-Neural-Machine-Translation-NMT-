@@ -1,0 +1,35 @@
+# Core ML and Deep Learning (Cloud deployment compatible)
+torch>=2.7.0,<2.9.0
+torchvision>=0.20.0,<0.25.0
+torchaudio>=2.7.0,<2.9.0
+
+# Streamlit for web interface
+streamlit
+
+# Data processing and utilities
+numpy
+pandas
+
+# Text processing and NLP
+sentencepiece
+regex
+
+# Additional utilities
+pathlib2
+tqdm
+
+# Optional: For better performance
+pillow
+matplotlib
+seaborn
+
+# For emoji handling and text processing
+emoji
+
+# System utilities
+psutil
+
+# Optional: Jupyter support (if using notebooks)
+jupyter
+notebook
+ipykernel
